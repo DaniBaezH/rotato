@@ -14,6 +14,7 @@ import { RefreshService } from '../services/refresh.service';
 import { SpuddyService } from '../services/spuddy.service';
 import { DevService } from '../services/dev.service';
 import {SelectPersonComponent} from "../select-person/select-person.component";
+import {PairRecord} from "../utillity/team-board";
 
 @Component({
   selector: 'app-display',
@@ -85,6 +86,39 @@ export class DisplayComponent implements OnInit {
     this.pairs = this.rotationService.makeItRotato();
     this.localStorageService.setPairs(this.pairs);
     this.availableDevs = [];
+  }
+
+  recordPairs(): void {
+
+    // Get the current date in YYYY-MM-DD format
+    const today = new Date().toISOString().split('T')[0];
+    let history = this.localStorageService.getHistory();
+
+    const newRecord: PairRecord = {
+      date: today,
+      pairs: this.pairs
+    };
+
+    // // Check if today's date is already in history
+    // const existingIndex = history.findIndex((entry: PairRecord) => entry.date === today);
+    //
+    // // Replace today if already existed another record or add new record
+    // if (existingIndex !== -1) {
+    //   history[existingIndex] = newRecord;  // Replace the existing record for today
+    // } else {
+    //   history.push(newRecord);
+    // }
+
+    history.push(newRecord);
+
+    // Limit history to the last 5 entries
+    if (history.length > 5) {
+      history.shift(); // Remove the oldest entry
+    }
+
+    this.localStorageService.setHistory(history);
+
+    console.log('Pairs recorded successfully:', history);
   }
 
   handleDrop(event: CdkDragDrop<string[]>, pair: Pair): void {

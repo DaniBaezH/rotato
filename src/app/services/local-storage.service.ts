@@ -10,7 +10,7 @@ import {
   THEME_KEY
 } from '../utillity/constants';
 import {NgxIndexedDBService} from 'ngx-indexed-db';
-import {TeamBoard} from '../utillity/team-board';
+import {PairRecord, TeamBoard} from '../utillity/team-board';
 import {Observable, Subscription} from 'rxjs';
 import {map} from 'rxjs/operators';
 
@@ -29,6 +29,7 @@ export class LocalStorageService {
   private stickingKey = 'sticking';
   private allowSoloKey = 'allowSolo';
   private volumeKey = 'volume';
+  private historyKey = 'history';
 
   constructor(
     private databaseService: NgxIndexedDBService,
@@ -83,6 +84,7 @@ export class LocalStorageService {
       boards: this.getBoards(),
       disabledBoards: this.getDisabledBoards(),
       sticking: this.getSticking(),
+      history: this.getHistory(),
     };
 
     const value = JSON.stringify(teamBoard);
@@ -121,6 +123,7 @@ export class LocalStorageService {
         this.setBoards(teamBoard.boards);
         this.setDisabledBoards(teamBoard.disabledBoards);
         this.setSticking(teamBoard.sticking);
+        this.setHistory(teamBoard.history);
       });
   }
 
@@ -177,6 +180,10 @@ export class LocalStorageService {
     return +localStorage.getItem(this.volumeKey);
   }
 
+  getHistory(): PairRecord[] {
+    return this.get(this.historyKey) as PairRecord[];
+  }
+
   get(field: string): any {
     const current = localStorage.getItem(field);
     if (current) {
@@ -223,6 +230,10 @@ export class LocalStorageService {
 
   setVolume(value: number): void {
     this.set(this.volumeKey, value);
+  }
+
+  setHistory(value:PairRecord[]): void {
+    this.set(this.historyKey, value);
   }
 
   set(field: string, update: any): void {

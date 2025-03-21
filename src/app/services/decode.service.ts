@@ -24,6 +24,7 @@ export class DecodeService {
       boards: this.localStorageService.getBoards(),
       disabledBoards: this.localStorageService.getDisabledBoards(),
       sticking: this.localStorageService.getSticking(),
+      history: this.localStorageService.getHistory(),
     };
     return encodeURIComponent(
       this.encodeToBase64(

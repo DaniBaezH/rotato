@@ -11,4 +11,10 @@ export class TeamBoard {
   boards: string[];
   disabledBoards: string[];
   sticking: Pair[];
+  history: PairRecord[];
+}
+
+export class PairRecord {
+  pairs: Pair[];
+  date: String;
 }

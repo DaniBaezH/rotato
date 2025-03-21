@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {LocalStorageService} from './local-storage.service';
-import {Pair} from '../utillity/pair';
+import {Pair, PairsCombination} from '../utillity/pair';
 import {shuffle} from '../utillity/lulz';
 
 @Injectable({
@@ -13,12 +13,13 @@ export class RotationService {
   ) {
   }
 
-  makeItRotato(): Pair[] {
+  getRotation(): PairsCombination {
     let devs = this.localStorageService.getDevs();
     let boards = this.localStorageService.getBoards();
     const disabled = this.localStorageService.getDisabled();
     const disabledBoards = this.localStorageService.getDisabledBoards();
-    const sticking = this.localStorageService.getSticking();
+    let sticking = this.localStorageService.getSticking();
+    const history = this.localStorageService.getHistory();
     let carryingPairs = this.getCarryingPairs();
 
     const stickingBoards = sticking.map(pair => pair.board);
@@ -26,17 +27,24 @@ export class RotationService {
     const carriersInRotation = carryingPairs.flatMap(pair => pair.devs);
     const carryingBoardsInRotation = carryingPairs.map(pair => pair.board);
 
-    const pairs = [...sticking];
+    let pairs: Pair[] = sticking.map(pair => ({
+      ...pair,
+      sticking: true,
+      recurrences: 0,
+      daysSinceLastRecurrence: 0,
+    }));
 
-    devs = devs.filter(dev => !disabled.includes(dev));
-    devs = devs.filter(dev => !stickingDevs.includes(dev));
-    devs = devs.filter(dev => !carriersInRotation.includes(dev));
-    boards = boards.filter(board => !disabledBoards.includes(board));
-    boards = boards.filter(board => !stickingBoards.includes(board));
-    boards = boards.filter(board => !carryingBoardsInRotation.includes(board));
+    devs = devs.filter(dev => !disabled.includes(dev));// remove disabled devs
+    devs = devs.filter(dev => !stickingDevs.includes(dev)); // remove devs that are sticking
+    devs = devs.filter(dev => !carriersInRotation.includes(dev)); // remove devs that are carrying
+
+    boards = boards.filter(board => !disabledBoards.includes(board)); // remove disabled boards
+    boards = boards.filter(board => !stickingBoards.includes(board)); // remove boards that are sticking
+    boards = boards.filter(board => !carryingBoardsInRotation.includes(board)); // remove boards that are carrying
+
     carryingPairs = carryingPairs.filter(carryingPair =>
       stickingDevs.findIndex(dev => carryingPair.devs.includes(dev)) < 0
-    );
+    );// remove devs that are sticking
 
     shuffle(carryingPairs);
     shuffle(boards);
@@ -93,7 +101,71 @@ export class RotationService {
       pairs[0].devs.push(solo);
     }
 
-    return pairs;
+    if (history.length > 1) {
+      for (let i = 0; i < pairs.length; i++) {
+        const currentPair = pairs[i];
+
+        if (!currentPair.sticking) {
+          const currentKey = currentPair.devs.slice().sort().join('-');
+
+          let count = 0;
+          let mostRecentIndex = 0;
+
+          for (let j = 0; j < history.length; j++) {
+            const record = history[j];
+
+            for (const pastPair of record.pairs) {
+              const pastKey = pastPair.devs.slice().sort().join('-');
+              if (pastKey === currentKey) {
+                count++;
+                mostRecentIndex = j;
+              }
+            }
+          }
+
+          currentPair.recurrences = count;
+          currentPair.daysSinceLastRecurrence = mostRecentIndex;
+
+        }
+      }
+    }
+
+    let score = 0;
+    for (const pair of pairs) {
+      score += pair.recurrences - pair.daysSinceLastRecurrence;
+    }
+
+    let comb: PairsCombination = {pairs: pairs, score: score};
+
+    console.log(comb);
+
+    return comb;
+  }
+
+  makeItRotato(): Pair[] {
+
+    let pairCombinations: PairsCombination[] = [];
+
+    for (let i: number = 0; i < 100; i++) {
+      pairCombinations.push(this.getRotation());
+    }
+
+    //find pair combination with the lowest score
+    let bestCombination: PairsCombination;
+
+    let bestScore: number = 0;
+
+    for (const combination of pairCombinations) {
+      if (!bestCombination || combination.score < bestScore) {
+        bestCombination = combination;
+        bestScore = combination.score;
+      }
+    }
+
+    console.log("Best combination score: " + bestCombination.score);
+    console.log(bestCombination.pairs);
+
+    return bestCombination.pairs;
   }
 
   private getCarryingPairs(): Pair[] {
