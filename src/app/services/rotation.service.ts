@@ -136,9 +136,6 @@ export class RotationService {
     }
 
     let comb: PairsCombination = {pairs: pairs, score: score};
-
-    console.log(comb);
-
     return comb;
   }
 
@@ -163,8 +160,6 @@ export class RotationService {
     }
 
     console.log("Best combination score: " + bestCombination.score);
-    console.log(bestCombination.pairs);
-
     return bestCombination.pairs;
   }
 
