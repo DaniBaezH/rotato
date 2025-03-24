@@ -155,6 +155,18 @@
       </div>
     </div>
   </mat-card>
+    <mat-card class="history-section" *ngIf="pairingHistory.length > 0">
+      <button mat-mini-fab (click)="clearHistory()" aria-label="Clear History" matTooltip="Clear Pairing History">
+        <mat-icon>blender</mat-icon> </button>
+      <mat-card-title>🕓 Pairing History (Last {{ pairingHistory.length }} Records)</mat-card-title>
+      <div class="history-day" *ngFor="let record of pairingHistory">
+        <h4>{{ record.date }}</h4>
+        <ul>
+          <li *ngFor="let pair of record.pairs">
+            {{ pair.devs.join(' + ') }}
+          </li>
+        </ul>
+      </div>
+    </mat-card>
 </div>
 </div>
-

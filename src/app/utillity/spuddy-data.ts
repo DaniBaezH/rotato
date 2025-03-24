@@ -1,4 +1,5 @@
 import { Pair } from './pair';
+import {PairRecord} from "./team-board";
 
 export class SpuddyData {
   pairs: Pair[];
@@ -8,6 +9,7 @@ export class SpuddyData {
   disabled: string[];
   disabledBoards: string[];
   availableDevs: string[];
+  history: PairRecord[];
 
   constructor(
     pairs: Pair[],
@@ -16,7 +18,8 @@ export class SpuddyData {
     boards: string[],
     disabled: string[],
     disabledBoards: string[],
-    devs: string[]
+    devs: string[],
+    history: PairRecord[]
   ) {
     this.pairs = pairs;
     this.carriers = carriers;
@@ -24,6 +27,7 @@ export class SpuddyData {
     this.boards = boards;
     this.disabledBoards = disabledBoards;
     this.sticking = sticking;
+    this.history = history;
 
     const devsInRotation = pairs.flatMap(x => x.devs);
     this.availableDevs = [];

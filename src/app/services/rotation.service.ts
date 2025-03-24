@@ -13,13 +13,13 @@ export class RotationService {
   ) {
   }
 
-  getRotation(): PairsCombination {
+  makeItRotato(): PairsCombination {
     let devs = this.localStorageService.getDevs();
     let boards = this.localStorageService.getBoards();
     const disabled = this.localStorageService.getDisabled();
     const disabledBoards = this.localStorageService.getDisabledBoards();
     let sticking = this.localStorageService.getSticking();
-    const history = this.localStorageService.getHistory();
+
     let carryingPairs = this.getCarryingPairs();
 
     const stickingBoards = sticking.map(pair => pair.board);
@@ -101,66 +101,81 @@ export class RotationService {
       pairs[0].devs.push(solo);
     }
 
-    if (history.length > 1) {
-      for (let i = 0; i < pairs.length; i++) {
-        const currentPair = pairs[i];
+    return {pairs: pairs, score: this.scoreCombination(pairs)};
+  }
 
-        if (!currentPair.sticking) {
-          const currentKey = currentPair.devs.slice().sort().join('-');
+  makeItANewRotato(): Pair[] {
 
-          let count = 0;
-          let mostRecentIndex = 0;
+    if (this.localStorageService.getHistory().length > 0) {
 
-          for (let j = 0; j < history.length; j++) {
-            const record = history[j];
+      let pairCombinations: PairsCombination[] = [];
 
-            for (const pastPair of record.pairs) {
-              const pastKey = pastPair.devs.slice().sort().join('-');
-              if (pastKey === currentKey) {
-                count++;
+      for (let i: number = 0; i < 100; i++) {
+        pairCombinations.push(this.makeItRotato());
+      }
+
+      //find pair combination with the lowest score
+      let bestCombination: PairsCombination;
+
+      let bestScore: number = 0;
+
+      for (const combination of pairCombinations) {
+        if (!bestCombination || combination.score < bestScore) {
+          bestCombination = combination;
+          bestScore = combination.score;
+        }
+      }
+
+      console.log("Best combination score: " + bestCombination.score);
+      return bestCombination.pairs;
+    }
+
+    return this.makeItRotato().pairs;
+  }
+
+  private scoreCombination(pairs: Pair[]): number {
+    let score = 0;
+    const history = this.localStorageService.getHistory();
+
+    for (let i = 0; i < pairs.length; i++) {
+
+      const currentPair = pairs[i];
+
+      if (!currentPair.sticking) {
+        const currentKey = currentPair.devs.slice().sort().join('-');
+
+        let count = 0;
+        let mostRecentIndex = 0;
+
+        for (let j = 0; j < history.length; j++) {
+          const record = history[j];
+
+          for (const pastPair of record.pairs) {
+            const pastKey = pastPair.devs.slice().sort().join('-');
+            if (pastKey === currentKey) {
+              count++;
+
+              if (mostRecentIndex == 0)
                 mostRecentIndex = j;
-              }
             }
           }
-
-          currentPair.recurrences = count;
-          currentPair.daysSinceLastRecurrence = mostRecentIndex;
-
         }
+
+        currentPair.recurrences = count*2;
+        currentPair.daysSinceLastRecurrence = 0;//mostRecentIndex;
+
+      }
+      else {
+        currentPair.recurrences = 0;
+        currentPair.daysSinceLastRecurrence = 0;
       }
     }
 
-    let score = 0;
     for (const pair of pairs) {
       score += pair.recurrences - pair.daysSinceLastRecurrence;
     }
 
-    let comb: PairsCombination = {pairs: pairs, score: score};
-    return comb;
-  }
-
-  makeItRotato(): Pair[] {
-
-    let pairCombinations: PairsCombination[] = [];
-
-    for (let i: number = 0; i < 100; i++) {
-      pairCombinations.push(this.getRotation());
-    }
-
-    //find pair combination with the lowest score
-    let bestCombination: PairsCombination;
-
-    let bestScore: number = 0;
-
-    for (const combination of pairCombinations) {
-      if (!bestCombination || combination.score < bestScore) {
-        bestCombination = combination;
-        bestScore = combination.score;
-      }
-    }
-
-    console.log("Best combination score: " + bestCombination.score);
-    return bestCombination.pairs;
+    return score;
   }
 
   private getCarryingPairs(): Pair[] {

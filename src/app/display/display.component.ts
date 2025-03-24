@@ -39,6 +39,7 @@ export class DisplayComponent implements OnInit {
   toolTip = 'SPIN THE POTATO! MAKE IT ROTATO!';
   doubleClickMessage = DOUBLE_CLICK_MESSAGE;
   availableDevCardTitle = '🔥🥔🔥 Fresh Taters 🔥🥔🔥';
+  public pairingHistory: PairRecord[] = [];
 
   constructor(
     private localStorageService: LocalStorageService,
@@ -54,9 +55,11 @@ export class DisplayComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadData();
+    this.pairingHistory = this.localStorageService.getHistory();
 
     this.refreshService.onDisplayRefresh().subscribe(() => {
       this.loadData();
+      this.pairingHistory = this.localStorageService.getHistory();
     });
   }
 
@@ -83,42 +86,46 @@ export class DisplayComponent implements OnInit {
   handleClick(): void {
     this.soundService.spinning();
     this.taterSpinningTime.emit();
-    this.pairs = this.rotationService.makeItRotato();
+    this.pairs = this.rotationService.makeItANewRotato();
     this.localStorageService.setPairs(this.pairs);
     this.availableDevs = [];
   }
 
   recordPairs(): void {
 
-    // Get the current date in YYYY-MM-DD format
-    const today = new Date().toISOString().split('T')[0];
-    let history = this.localStorageService.getHistory();
+    if(this.pairs.length > 0) {
 
-    const newRecord: PairRecord = {
-      date: today,
-      pairs: this.pairs
-    };
+      // Get the current date in YYYY-MM-DD format
+      const today = new Date().toISOString().split('T')[0];
+      let history = this.localStorageService.getHistory();
 
-    // // Check if today's date is already in history
-    // const existingIndex = history.findIndex((entry: PairRecord) => entry.date === today);
-    //
-    // // Replace today if already existed another record or add new record
-    // if (existingIndex !== -1) {
-    //   history[existingIndex] = newRecord;  // Replace the existing record for today
-    // } else {
-    //   history.push(newRecord);
-    // }
+      const newRecord: PairRecord = {
+        date: today,
+        pairs: this.pairs
+      };
 
-    history.push(newRecord);
+      // // Check if today's date is already in history
+      // const existingIndex = history.findIndex((entry: PairRecord) => entry.date === today);
+      //
+      // // Replace today if already existed another record or add new record
+      // if (existingIndex !== -1) {
+      //   history[existingIndex] = newRecord;  // Replace the existing record for today
+      // } else {
+      //   history.push(newRecord);
+      // }
 
-    // Limit history to the last 5 entries
-    if (history.length > 5) {
-      history.shift(); // Remove the oldest entry
+      history.push(newRecord);
+
+      // Limit history to the last 5 entries
+      if (history.length > 5) {
+        history.shift(); // Remove the oldest entry
+      }
+
+      this.localStorageService.setHistory(history);
+      this.pairingHistory = history;
+
+      console.log('Pairs recorded successfully:', history);
     }
-
-    this.localStorageService.setHistory(history);
-
-    console.log('Pairs recorded successfully:', history);
   }
 
   handleDrop(event: CdkDragDrop<string[]>, pair: Pair): void {
@@ -206,6 +213,11 @@ export class DisplayComponent implements OnInit {
 
   getDevCardStyle(): string {
     return this.themeService.devCard();
+  }
+
+  clearHistory(): void{
+    this.pairingHistory = [];
+    this.localStorageService.setHistory([]);
   }
 
   isDevStrikeThrough(dev: string): string {

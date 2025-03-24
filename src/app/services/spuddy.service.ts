@@ -17,7 +17,8 @@ export class SpuddyService {
     const disabledDevs = this.localStorageService.getDisabled();
     const disabledBoards = this.localStorageService.getDisabledBoards();
     const devs = this.localStorageService.getDevs();
+    const history = this.localStorageService.getHistory();
 
-    return new SpuddyData(pairs, sticking, carriers, boards, disabledDevs, disabledBoards, devs);
+    return new SpuddyData(pairs, sticking, carriers, boards, disabledDevs, disabledBoards, devs, history);
   }
 }
