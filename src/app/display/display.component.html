@@ -56,13 +56,13 @@
             rotate_left
           </mat-icon>
         </button>
-        <!-- New "Record Pairs" Button -->
         <button
           mat-mini-fab
           class="record-button"
           aria-label="Record Pairs"
           (click)="recordPairs()"
           matTooltip="Record Current Pairings"
+          *ngIf="keepHistory"
         >
           <mat-icon>
             save
@@ -155,17 +155,25 @@
       </div>
     </div>
   </mat-card>
-    <mat-card class="history-section" *ngIf="pairingHistory.length > 0">
-      <button mat-mini-fab (click)="clearHistory()" aria-label="Clear History" matTooltip="Clear Pairing History">
-        <mat-icon>blender</mat-icon> </button>
-      <mat-card-title>🕓 Pairing History (Last {{ pairingHistory.length }} Records)</mat-card-title>
-      <div class="history-day" *ngFor="let record of pairingHistory">
-        <h4>{{ record.date }}</h4>
-        <ul>
-          <li *ngFor="let pair of record.pairs">
-            {{ pair.devs.join(' + ') }}
-          </li>
-        </ul>
+    <mat-card class="history-section" *ngIf="keepHistory && pairingHistory.length > 0">
+      <div class="history-title">
+        <h3><mat-icon>history</mat-icon> Pairing History</h3>
+        <button mat-mini-fab (click)="clearHistory()"
+                aria-label="Clear History"
+                matTooltip="Clear Pairing History"
+                class="delete-button">
+          <mat-icon>delete_forever</mat-icon>
+        </button>
+      </div>
+      <div class="calendar-grid">
+        <ng-container *ngFor="let record of pairingHistory">
+          <div class="history-day" [class.current-day]="isCurrentDay(record.date)">
+            <h4>{{ formatDate(record.date) }}</h4>
+            <ul>
+              <li *ngFor="let pair of record.pairs">{{ pair.devs.join(' + ') }}</li>
+            </ul>
+          </div>
+        </ng-container>
       </div>
     </mat-card>
 </div>

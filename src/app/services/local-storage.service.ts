@@ -30,6 +30,8 @@ export class LocalStorageService {
   private allowSoloKey = 'allowSolo';
   private volumeKey = 'volume';
   private historyKey = 'history';
+  private keepHistoryKey = 'keepHistory';
+  private historyDaysKey = 'historyDays';
 
   constructor(
     private databaseService: NgxIndexedDBService,
@@ -184,6 +186,16 @@ export class LocalStorageService {
     return this.get(this.historyKey) as PairRecord[];
   }
 
+  getKeepHistory(): boolean {
+    const value = localStorage.getItem(this.keepHistoryKey);
+    return value ? JSON.parse(value) : false;
+  }
+
+  getHistoryDays(): number {
+    const value = localStorage.getItem(this.historyDaysKey);
+    return value ? JSON.parse(value) : 5; // Default to 5 days if not set
+  }
+
   get(field: string): any {
     const current = localStorage.getItem(field);
     if (current) {
@@ -232,8 +244,20 @@ export class LocalStorageService {
     this.set(this.volumeKey, value);
   }
 
-  setHistory(value:PairRecord[]): void {
-    this.set(this.historyKey, value);
+  setHistory(history: PairRecord[]): void {
+    localStorage.setItem('pairingHistory', JSON.stringify(history));
+  }
+
+  clearHistory(): void {
+    localStorage.setItem('pairingHistory', JSON.stringify([]));
+  }
+
+  setKeepHistory(value: boolean): void {
+    localStorage.setItem(this.keepHistoryKey, JSON.stringify(value));
+  }
+
+  setHistoryDays(days: number): void {
+    localStorage.setItem(this.historyDaysKey, JSON.stringify(days));
   }
 
   set(field: string, update: any): void {

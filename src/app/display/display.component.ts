@@ -10,9 +10,9 @@ import {DOUBLE_CLICK_MESSAGE} from '../utillity/constants';
 import {NgxCaptureService} from 'ngx-capture';
 import {MatDialog, MatDialogConfig} from '@angular/material/dialog';
 import {ScreenshotComponent} from '../screenshot/screenshot.component';
-import { RefreshService } from '../services/refresh.service';
-import { SpuddyService } from '../services/spuddy.service';
-import { DevService } from '../services/dev.service';
+import {RefreshService} from '../services/refresh.service';
+import {SpuddyService} from '../services/spuddy.service';
+import {DevService} from '../services/dev.service';
 import {SelectPersonComponent} from "../select-person/select-person.component";
 import {PairRecord} from "../utillity/team-board";
 
@@ -24,22 +24,23 @@ import {PairRecord} from "../utillity/team-board";
 export class DisplayComponent implements OnInit {
   @ViewChild('screen', {static: true}) screen: any;
   @Output() taterSpinningTime: EventEmitter<any> = new EventEmitter<any>();
-  @Input()
-  isMobile = false;
+  @Input() isMobile = false;
+  @Input() keepHistory = false;
+  historyDays = 5;  // Default to 5 days
 
   pairs: Pair[] = [];
-  sticking: Pair[];
+  sticking: Pair[] = [];
   carriers: string[] = [];
   boards: string[] = [];
   disabledDevs: string[] = [];
   disabledBoards: string[] = [];
   availableDevs: string[] = [];
+  pairingHistory: PairRecord[] = [];
 
   displayTitleText = 'Spuddies';
   toolTip = 'SPIN THE POTATO! MAKE IT ROTATO!';
   doubleClickMessage = DOUBLE_CLICK_MESSAGE;
   availableDevCardTitle = '🔥🥔🔥 Fresh Taters 🔥🥔🔥';
-  public pairingHistory: PairRecord[] = [];
 
   constructor(
     private localStorageService: LocalStorageService,
@@ -56,10 +57,14 @@ export class DisplayComponent implements OnInit {
   ngOnInit(): void {
     this.loadData();
     this.pairingHistory = this.localStorageService.getHistory();
+    this.keepHistory = this.localStorageService.getKeepHistory();
+    this.historyDays = this.localStorageService.getHistoryDays();
 
     this.refreshService.onDisplayRefresh().subscribe(() => {
       this.loadData();
       this.pairingHistory = this.localStorageService.getHistory();
+      this.keepHistory = this.localStorageService.getKeepHistory();
+      this.historyDays = this.localStorageService.getHistoryDays();
     });
   }
 
@@ -264,5 +269,19 @@ export class DisplayComponent implements OnInit {
     this.disabledDevs = spuddyData.disabled;
     this.disabledBoards = spuddyData.disabledBoards;
     this.availableDevs = spuddyData.availableDevs;
+  }
+
+  formatDate(dateStr: string): string {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric'
+    });
+  }
+
+  isCurrentDay(dateStr: string): boolean {
+    const today = new Date().toISOString().split('T')[0];
+    return dateStr === today;
   }
 }

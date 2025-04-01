@@ -40,6 +40,8 @@ import {MatSliderModule} from '@angular/material/slider';
 import { EditDialogComponent } from './edit-dialog/edit-dialog.component';
 import { SelectPersonComponent } from './select-person/select-person.component';
 
+import { MatSelectModule } from '@angular/material/select';
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -76,6 +78,7 @@ import { SelectPersonComponent } from './select-person/select-person.component';
     ReactiveFormsModule,
     MatIconModule,
     MatCheckboxModule,
+    MatSelectModule,
     NgxCaptureModule,
     RouterModule.forRoot(routes),
     ServiceWorkerModule.register('ngsw-worker.js', {enabled: environment.production, registrationStrategy: 'registerImmediately'}),

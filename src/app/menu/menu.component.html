@@ -38,8 +38,8 @@
   <button
     mat-menu-item
     aria-label="Delete"
-    [matMenuTriggerFor]="deleteboard"
     *ngIf="teamBoards.length>0"
+    [matMenuTriggerFor]="deleteboard"
     matTooltip="😵🥔"
   >
     Delete
@@ -59,10 +59,19 @@
   >
     Sound
   </button>
-  <div>
+  <button
+    mat-menu-item
+    aria-label="History"
+    [matMenuTriggerFor]="history"
+    matTooltip="📅🥔"
+  >
+    History
+  </button>
+  <div class="menu-item">
     <mat-checkbox
       [checked]="allowSolo"
       (change)="handleAllowSolo($event)"
+      (click)="$event.stopPropagation()"
     >
       {{allowSoloText}}
     </mat-checkbox>
@@ -127,6 +136,27 @@
       >
         {{enableSoundText}}
       </mat-checkbox>
+    </div>
+  </mat-menu>
+
+  <mat-menu #history="matMenu">
+    <div class="menu-item">
+      <mat-checkbox
+        [checked]="keepHistory"
+        (change)="handleKeepHistory($event)"
+      >
+        Keep Pairing History
+      </mat-checkbox>
+    </div>
+    <div *ngIf="keepHistory" class="history-days">
+      <mat-form-field>
+        <mat-label>History Duration (Days)</mat-label>
+        <mat-select [(ngModel)]="historyDays" (selectionChange)="handleHistoryDays($event)">
+          <mat-option *ngFor="let days of historyDaysOptions" [value]="days">
+            {{days}} days
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
     </div>
   </mat-menu>
 </mat-menu>

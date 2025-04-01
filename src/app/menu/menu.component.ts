@@ -37,6 +37,9 @@ export class MenuComponent implements OnInit {
   allowSolo: boolean;
   allowSoloText = 'Allow Solo';
   volume: number;
+  keepHistory: boolean;
+  historyDays: number;
+  historyDaysOptions = [5, 6, 7, 8, 9, 10];
 
   constructor(
     private themeService: ThemeService,
@@ -53,6 +56,8 @@ export class MenuComponent implements OnInit {
     this.enableSound = this.soundService.soundEnabled;
     this.allowSolo = this.localStorageService.getAllowSolo();
     this.volume = this.localStorageService.getVolume();
+    this.keepHistory = this.localStorageService.getKeepHistory();
+    this.historyDays = this.localStorageService.getHistoryDays();
     this.localStorageService.getTeamBoards()
       .subscribe(boards => this.teamBoards = boards);
   }
@@ -122,6 +127,18 @@ export class MenuComponent implements OnInit {
 
   handleSound($event: MatSliderChange): void {
     this.soundService.setVolume($event.value);
+  }
+
+  handleKeepHistory(event: MatCheckboxChange): void {
+    this.keepHistory = event.checked;
+    this.localStorageService.setKeepHistory(event.checked);
+    this.soundService.heyListen();
+  }
+
+  handleHistoryDays(event: any): void {
+    this.historyDays = event.value;
+    this.localStorageService.setHistoryDays(event.value);
+    this.soundService.heyListen();
   }
 
   private openSnackBar(message: string, action: string): void {
