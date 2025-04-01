@@ -26,7 +26,7 @@ export class DisplayComponent implements OnInit {
   @Output() taterSpinningTime: EventEmitter<any> = new EventEmitter<any>();
   @Input() isMobile = false;
   @Input() keepHistory = false;
-  historyDays = 5;  // Default to 5 days
+  historyDays = 5;
 
   pairs: Pair[] = [];
   sticking: Pair[] = [];
@@ -102,7 +102,6 @@ export class DisplayComponent implements OnInit {
       let history = this.localStorageService.getHistory();
       let historyDays = this.localStorageService.getHistoryDays();
 
-      // Convert Pair[] to OnlyPair[]
       const onlyPairs = this.pairs.map(pair => ({
         pairs: pair.devs
       }));
@@ -117,19 +116,19 @@ export class DisplayComponent implements OnInit {
 
       // Replace today if already existed another record or add new record
       if (existingIndex !== -1) {
-        history[existingIndex] = newRecord;  // Replace the existing record for today
+        history[existingIndex] = newRecord;
       } else {
         history.push(newRecord);
       }
 
       // Limit history to the amount of days selected 5-10
       if (history.length > historyDays) {
-        history.shift(); // Remove the oldest entry
+        history.shift();
       }
 
       this.localStorageService.setHistory(history);
       this.pairingHistory = history;
-      this.soundService.heyListen(); // Play sound when recording pairs
+      this.soundService.heyListen();
     }
   }
 
@@ -193,6 +192,10 @@ export class DisplayComponent implements OnInit {
 
   getColor(dev: string): string {
     return this.isCarrying(dev) ? this.themeService.getSelected() : this.themeService.devCard();
+  }
+
+  getHistoryColor(date: string): string {
+    return this.isCurrentDay(date) ? this.themeService.getSelected() : this.themeService.devCard();
   }
 
   isTurnedIn(pair: Pair): Pair {
@@ -272,8 +275,7 @@ export class DisplayComponent implements OnInit {
   }
 
   formatDate(dateStr: string): string {
-    // Add timezone offset to handle date consistently
-    const [year, month, day] = dateStr.split('-').map(Number);
+    const [year, month, day]: number[] = dateStr.split('-').map(Number);
     const date = new Date(year, month - 1, day);  // month is 0-based in Date constructor
     return date.toLocaleDateString('en-US', {
       weekday: 'short',
@@ -284,10 +286,21 @@ export class DisplayComponent implements OnInit {
 
   private getLocalDateString(): string {
     const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private getRandomPastDateString(): string {
+    const date = new Date();
+    date.setDate(date.getDate() - Math.floor(Math.random() * 30));
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   }
 
   isCurrentDay(dateStr: string): boolean {
-    return dateStr === this.getLocalDateString();
+    const today = this.getLocalDateString();
+    console.log('Comparing dates:', { today, dateStr }); // Debug log
+    return today === dateStr;
   }
 }

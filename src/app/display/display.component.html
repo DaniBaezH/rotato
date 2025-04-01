@@ -156,21 +156,21 @@
     </div>
   </mat-card>
   <ng-container *ngIf="keepHistory">
-    <mat-card class="history-section">
+    <mat-card [ngClass]="getPairCardStyle()">
       <div class="history-title">
-        <h3><mat-icon>history</mat-icon> Pairing History</h3>
+        <h3>History</h3>
         <button mat-mini-fab (click)="clearHistory()"
                 aria-label="Clear History"
                 matTooltip="Clear Pairing History"
                 class="delete-button">
-          <mat-icon>delete_forever</mat-icon>
+          <mat-icon>delete</mat-icon>
         </button>
       </div>
       <div class="calendar-grid">
         <ng-container *ngFor="let record of pairingHistory">
-          <div class="history-day" [class.current-day]="isCurrentDay(record.date)">
+          <div class="history-day" [ngClass]="getHistoryColor(record.date)">
             <h4>
-              <mat-icon class="calendar-icon">event</mat-icon>
+              <mat-icon>local_dining</mat-icon>
               {{ formatDate(record.date) }}
             </h4>
             <ul>
@@ -179,7 +179,7 @@
                   {{ pair.pairs.join(' + ') }}
                 </ng-container>
                 <ng-template #soloDev>
-                  {{ pair.pairs[0] }}
+                  <span>{{ pair.pairs[0] }}</span>
                 </ng-template>
               </li>
             </ul>
