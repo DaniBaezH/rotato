@@ -247,11 +247,11 @@ export class LocalStorageService {
   }
 
   setHistory(history: PairRecord[]): void {
-    localStorage.setItem('pairingHistory', JSON.stringify(history));
+    localStorage.setItem(this.historyKey, JSON.stringify(history));
   }
 
   clearHistory(): void {
-    localStorage.setItem('pairingHistory', JSON.stringify([]));
+    localStorage.setItem(this.historyKey, JSON.stringify([]));
   }
 
   setKeepHistory(value: boolean): void {
