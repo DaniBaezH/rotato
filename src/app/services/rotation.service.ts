@@ -160,11 +160,11 @@ export class RotationService {
     let score = 0;
     const history = this.localStorageService.getHistory();
     const today = new Date();
-    const teamSize = pairs.length;  // Number of pairs in the team
+    const teamSize = this.localStorageService.getDevs().length;  
 
-    // Scale factors based on team size
-    const recurrenceWeight = teamSize <= 2 ? 2 : 3;  // Less penalty for small teams
-    const daysWeight = teamSize <= 2 ? 3 : 2;        // More weight on days for small teams
+    // Scale factors based on actual team size
+    const recurrenceWeight = teamSize <= 4 ? 2 : 3;  // Less recurrence penalty for small teams
+    const daysWeight = teamSize <= 4 ? 3 : 2;        // More weight on days for small teams
     const defaultDays = teamSize * 5;                // Scales with team size
 
     for (let i = 0; i < pairs.length; i++) {
@@ -205,8 +205,7 @@ export class RotationService {
         currentPair.daysSinceLastRecurrence = 0;
       }
     }
-
-    // Calculate final score with team-size-adjusted weights
+    
     for (const pair of pairs) {
       // For small teams: less penalty for recurrences, more weight on days
       // For larger teams: more penalty for recurrences, normal weight on days
