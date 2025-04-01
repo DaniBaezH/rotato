@@ -34,13 +34,13 @@ export class RotationService {
       daysSinceLastRecurrence: 0,
     }));
 
-    devs = devs.filter(dev => !disabled.includes(dev));// remove disabled devs
-    devs = devs.filter(dev => !stickingDevs.includes(dev)); // remove devs that are sticking
-    devs = devs.filter(dev => !carriersInRotation.includes(dev)); // remove devs that are carrying
+    devs = devs.filter(dev => !disabled.includes(dev));
+    devs = devs.filter(dev => !stickingDevs.includes(dev));
+    devs = devs.filter(dev => !carriersInRotation.includes(dev));
 
-    boards = boards.filter(board => !disabledBoards.includes(board)); // remove disabled boards
-    boards = boards.filter(board => !stickingBoards.includes(board)); // remove boards that are sticking
-    boards = boards.filter(board => !carryingBoardsInRotation.includes(board)); // remove boards that are carrying
+    boards = boards.filter(board => !disabledBoards.includes(board));
+    boards = boards.filter(board => !stickingBoards.includes(board));
+    boards = boards.filter(board => !carryingBoardsInRotation.includes(board));
 
     carryingPairs = carryingPairs.filter(carryingPair =>
       stickingDevs.findIndex(dev => carryingPair.devs.includes(dev)) < 0
@@ -106,73 +106,111 @@ export class RotationService {
 
   makeItANewRotato(): Pair[] {
 
-    if (this.localStorageService.getHistory().length > 0) {
-
-      let pairCombinations: PairsCombination[] = [];
-
-      for (let i: number = 0; i < 100; i++) {
-        pairCombinations.push(this.makeItRotato());
-      }
-
-      //find pair combination with the lowest score
-      let bestCombination: PairsCombination;
-
-      let bestScore: number = 0;
-
-      for (const combination of pairCombinations) {
-        if (!bestCombination || combination.score < bestScore) {
-          bestCombination = combination;
-          bestScore = combination.score;
-        }
-      }
-
-      console.log("Best combination score: " + bestCombination.score);
-      return bestCombination.pairs;
+    if (!this.localStorageService.getKeepHistory() || this.localStorageService.getHistory().length === 0) {
+      return this.makeItRotato().pairs;
     }
 
-    return this.makeItRotato().pairs;
+    let pairCombinations: PairsCombination[] = [];
+
+    for (let i: number = 0; i < this.getNumberOfIterations(); i++) {
+      pairCombinations.push(this.makeItRotato());
+    }
+
+    return this.getBestCombination(pairCombinations);
+  }
+
+  private getBestCombination(pairCombinations: PairsCombination[]): Pair[] {
+    let bestCombination: PairsCombination;
+    let bestScore: number = 0;
+
+    for (const combination of pairCombinations) {
+      if (!bestCombination || combination.score < bestScore) {
+        bestCombination = combination;
+        bestScore = combination.score;
+      }
+    }
+
+    return bestCombination.pairs;
+  }
+
+  // Calculate number of iterations based on team size
+  private getNumberOfIterations(): number {
+    const baseDevs = this.localStorageService.getDevs().length;
+    return Math.min(Math.max(50, baseDevs * 15), 200);
+
+    /*
+    Minimum: 50 iterations (ensures good coverage for small teams)
+    Scaling: 15 iterations per developer
+    Maximum: 200 iterations
+      4 developers: 60 iterations
+      5 developers: 75 iterations
+      6 developers: 90 iterations
+      7 developers: 105 iterations
+      8 developers: 120 iterations
+      9 developers: 135 iterations
+      10 developers: 150 iterations
+      11 developers: 165 iterations
+      12 developers: 180 iterations
+      13 developers: 195 iterations
+      14+ developers: 200 iterations
+    */
   }
 
   private scoreCombination(pairs: Pair[]): number {
     let score = 0;
     const history = this.localStorageService.getHistory();
+    const today = new Date();
+    const teamSize = pairs.length;  // Number of pairs in the team
+
+    // Scale factors based on team size
+    const recurrenceWeight = teamSize <= 2 ? 2 : 3;  // Less penalty for small teams
+    const daysWeight = teamSize <= 2 ? 3 : 2;        // More weight on days for small teams
+    const defaultDays = teamSize * 5;                // Scales with team size
 
     for (let i = 0; i < pairs.length; i++) {
-
       const currentPair = pairs[i];
 
       if (!currentPair.sticking) {
         const currentKey = currentPair.devs.slice().sort().join('-');
-
         let count = 0;
-        let mostRecentIndex = 0;
+        let lastPairingDate: Date | null = null;
 
         for (let j = 0; j < history.length; j++) {
           const record = history[j];
-
           for (const pastPair of record.pairs) {
             const pastKey = pastPair.devs.slice().sort().join('-');
             if (pastKey === currentKey) {
               count++;
-
-              if (mostRecentIndex == 0)
-                mostRecentIndex = j;
+              // Keep track of the most recent pairing date
+              const recordDate = new Date(record.date.toString());
+              if (!lastPairingDate || recordDate > lastPairingDate) {
+                lastPairingDate = recordDate;
+              }
             }
           }
         }
 
-        currentPair.recurrences = count*2;
-        currentPair.daysSinceLastRecurrence = 0;//mostRecentIndex;
+        currentPair.recurrences = count * 2;
 
-      }
-      else {
+        // Calculate days since last pairing
+        if (lastPairingDate) {
+          const diffTime = Math.abs(today.getTime() - lastPairingDate.getTime());
+          currentPair.daysSinceLastRecurrence = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        } else {
+          // If never paired before, scale with team size
+          currentPair.daysSinceLastRecurrence = defaultDays;
+        }
+      } else {
         currentPair.recurrences = 0;
         currentPair.daysSinceLastRecurrence = 0;
       }
     }
 
+    // Calculate final score with team-size-adjusted weights
     for (const pair of pairs) {
-      score += pair.recurrences - pair.daysSinceLastRecurrence;
+      // For small teams: less penalty for recurrences, more weight on days
+      // For larger teams: more penalty for recurrences, normal weight on days
+      score += (pair.recurrences * recurrenceWeight) - (pair.daysSinceLastRecurrence * daysWeight);
     }
 
     return score;
