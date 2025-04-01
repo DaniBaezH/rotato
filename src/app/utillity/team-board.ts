@@ -12,9 +12,14 @@ export class TeamBoard {
   disabledBoards: string[];
   sticking: Pair[];
   history: PairRecord[];
+  keepHistory: boolean;
 }
 
 export class PairRecord {
-  pairs: Pair[];
+  pairs: OnlyPair[];
   date: String;
+}
+
+export class OnlyPair {
+  pairs: string[];
 }

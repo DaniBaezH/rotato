@@ -97,16 +97,20 @@ export class DisplayComponent implements OnInit {
   }
 
   recordPairs(): void {
-
     if(this.pairs.length > 0) {
-
       // Get the current date in YYYY-MM-DD format
       const today = new Date().toISOString().split('T')[0];
       let history = this.localStorageService.getHistory();
+      let historyDays = this.localStorageService.getHistoryDays();
+
+      // Convert Pair[] to OnlyPair[]
+      const onlyPairs = this.pairs.map(pair => ({
+        pairs: pair.devs
+      }));
 
       const newRecord: PairRecord = {
         date: today,
-        pairs: this.pairs
+        pairs: onlyPairs
       };
 
       // // Check if today's date is already in history
@@ -121,8 +125,8 @@ export class DisplayComponent implements OnInit {
 
       history.push(newRecord);
 
-      // Limit history to the last 5 entries
-      if (history.length > 5) {
+      // Limit history to the amount of days selected 5-10
+      if (history.length > historyDays) {
         history.shift(); // Remove the oldest entry
       }
 
@@ -222,7 +226,7 @@ export class DisplayComponent implements OnInit {
 
   clearHistory(): void{
     this.pairingHistory = [];
-    this.localStorageService.setHistory([]);
+    this.localStorageService.clearHistory();
   }
 
   isDevStrikeThrough(dev: string): string {

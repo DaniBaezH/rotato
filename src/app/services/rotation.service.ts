@@ -177,8 +177,8 @@ export class RotationService {
 
         for (let j = 0; j < history.length; j++) {
           const record = history[j];
-          for (const pastPair of record.pairs) {
-            const pastKey = pastPair.devs.slice().sort().join('-');
+          for (const pastPair of record.pairs) {           
+            const pastKey = pastPair.pairs.slice().sort().join('-');
             if (pastKey === currentKey) {
               count++;
               // Keep track of the most recent pairing date

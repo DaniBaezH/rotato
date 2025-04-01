@@ -29,7 +29,7 @@ export class LocalStorageService {
   private stickingKey = 'sticking';
   private allowSoloKey = 'allowSolo';
   private volumeKey = 'volume';
-  private historyKey = 'history';
+  private historyKey = 'pairingHistory';
   private keepHistoryKey = 'keepHistory';
   private historyDaysKey = 'historyDays';
 
@@ -87,6 +87,7 @@ export class LocalStorageService {
       disabledBoards: this.getDisabledBoards(),
       sticking: this.getSticking(),
       history: this.getHistory(),
+      keepHistory: this.getKeepHistory(),
     };
 
     const value = JSON.stringify(teamBoard);
@@ -126,6 +127,7 @@ export class LocalStorageService {
         this.setDisabledBoards(teamBoard.disabledBoards);
         this.setSticking(teamBoard.sticking);
         this.setHistory(teamBoard.history);
+        this.setKeepHistory(teamBoard.keepHistory);
       });
   }
 
