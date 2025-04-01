@@ -10,6 +10,7 @@ import {MatSnackBar} from '@angular/material/snack-bar';
 import {DecodeService} from '../services/decode.service';
 import {Clipboard} from '@angular/cdk/clipboard';
 import {MatSliderChange} from '@angular/material/slider';
+import {RefreshService} from '../services/refresh.service';
 
 @Component({
   selector: 'app-menu',
@@ -46,6 +47,7 @@ export class MenuComponent implements OnInit {
     private localStorageService: LocalStorageService,
     private decodeService: DecodeService,
     private soundService: SoundService,
+    private refreshService: RefreshService,
     public dialog: MatDialog,
     private snackbar: MatSnackBar,
     private clipboard: Clipboard,
@@ -109,7 +111,7 @@ export class MenuComponent implements OnInit {
           .subscribe(next => this.teamBoards = next)
       );
     this.openSnackBar(`${board} has been deleted.`, 'Good');
-    this.soundService.heyListen();
+    this.soundService.doAYeet();
   }
 
   handleShare(): void {
@@ -133,12 +135,14 @@ export class MenuComponent implements OnInit {
     this.keepHistory = event.checked;
     this.localStorageService.setKeepHistory(event.checked);
     this.soundService.heyListen();
+    this.refreshService.triggerDisplayRefresh();
   }
 
   handleHistoryDays(event: any): void {
     this.historyDays = event.value;
     this.localStorageService.setHistoryDays(event.value);
     this.soundService.heyListen();
+    this.refreshService.triggerDisplayRefresh();
   }
 
   private openSnackBar(message: string, action: string): void {
