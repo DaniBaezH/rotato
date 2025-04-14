@@ -44,6 +44,8 @@ export class SharedComponent implements OnInit {
     this.localStorageService.setBoards(board.boards);
     this.localStorageService.setDisabledBoards(board.disabledBoards);
     this.localStorageService.setSticking(board.sticking);
+    this.localStorageService.setHistory(board.history);
+    this.localStorageService.setKeepHistory(board.keepHistory);
     this.router.navigate(['/']).then();
   }
 
