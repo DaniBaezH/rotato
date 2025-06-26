@@ -160,7 +160,7 @@ export class RotationService {
     let score = 0;
     const history = this.localStorageService.getHistory();
     const today = new Date();
-    const teamSize = this.localStorageService.getDevs().length;  
+    const teamSize = this.localStorageService.getDevs().length;
 
     // Scale factors based on actual team size
     const recurrenceWeight = teamSize <= 4 ? 2 : 3;  // Less recurrence penalty for small teams
@@ -177,7 +177,7 @@ export class RotationService {
 
         for (let j = 0; j < history.length; j++) {
           const record = history[j];
-          for (const pastPair of record.pairs) {           
+          for (const pastPair of record.pairs) {
             const pastKey = pastPair.pairs.slice().sort().join('-');
             if (pastKey === currentKey) {
               count++;
@@ -205,7 +205,7 @@ export class RotationService {
         currentPair.daysSinceLastRecurrence = 0;
       }
     }
-    
+
     for (const pair of pairs) {
       // For small teams: less penalty for recurrences, more weight on days
       // For larger teams: more penalty for recurrences, normal weight on days

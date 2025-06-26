@@ -408,40 +408,271 @@ describe('RotationService', () => {
       });
     });
 
-    describe('when history is enabled and not empty', () => {
-      const dev1 = getNthDev(1);
-      const dev2 = getNthDev(2);
-      const dev3 = getNthDev(3);
-      const dev4 = getNthDev(4);
-      const dev5 = getNthDev(5);
-      const dev6 = getNthDev(6);
-      const dev7 = getNthDev(7);
+    describe('when history is enabled', () => {
+      const dev1 = 'dev1';// getNthDev(1);
+      const dev2 = 'dev2';// getNthDev(2);
+      const dev3 = 'dev3';// getNthDev(3);
+      const dev4 = 'dev4';//getNthDev(4);
+      const dev5 = 'dev5';//getNthDev(5);
+      const dev6 = 'dev6';//getNthDev(6);
+      const dev7 = 'dev7';//getNthDev(7);
+      const dev8 = 'dev8';//getNthDev(8);
+      const dev9 = 'dev9';//getNthDev(9);
+      const dev10 = 'dev10';//getNthDev(10);
+      const dev11 = 'dev11';//getNthDev(11);
 
       const board1 = getNthBoard(1);
       const board2 = getNthBoard(2);
       const board3 = getNthBoard(3);
       const board4 = getNthBoard(4);
+      const board5 = getNthBoard(5);
+      const board6 = getNthBoard(6);
 
       beforeEach(() => {
         localStorageService.getKeepHistory.mockReturnValue(true);
-        localStorageService.getDevs.mockReturnValue([dev1, dev2, dev3, dev4, dev5, dev6, dev7]);
-        localStorageService.getBoards.mockReturnValue([board1, board2, board3, board4]);
       });
-
-      function getDateFromNDaysAgo(daysAgo: number): string {
-        const date = new Date();
-        date.setDate(date.getDate() - daysAgo);
-
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
-        const day = String(date.getDate()).padStart(2, '0');
-
-        return `${year}-${month}-${day}`;
-      }
 
       it.each([
         {
-          name: '2 days history - yesterdays pairings shouldnt be picked today (tolerance up to 2 in 10 attempts)',
+          name: 'Small Team Size: Yesterday\'s pairings shouldn\'t be picked today (3 days history)',
+          teamSize: 4,
+          historyDays: 5,
+          history: [
+            {
+              date: getDateFromNDaysAgo(1),//yesterday
+              pairs: [
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3]},//solo
+                {pairs: [dev4]},//solo
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(2),
+              pairs: [
+                {pairs: [dev4, dev2]},
+                {pairs: [dev1, dev3]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(3),
+              pairs: [
+                {pairs: [dev1, dev3]},
+                {pairs: [dev3, dev4]},
+              ]
+            }
+          ],
+          assertionType: 'maxOccurrences',
+          expectedOccurrences: 2,
+          attempts: 10,
+          pairsToCheck: [
+            {dev1:dev1, dev2:dev2},
+            {dev1:dev3}, // make sure wasn't picked to be solo again
+            {dev1:dev4}, // make sure wasn't picked to be solo again
+          ]
+        },
+        {
+          name: 'Small Team Size: Yesterday\'s pairings shouldn\'t be picked today (1 day history)',
+          teamSize: 4,
+          historyDays: 3,
+          history: [
+            {
+              date: getDateFromNDaysAgo(1), //yesterday
+              pairs: [
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3]},
+                {pairs: [dev4]}
+              ]
+            }
+          ],
+          assertionType: 'maxOccurrences',
+          expectedOccurrences: 0,
+          attempts: 10,
+          pairsToCheck: [
+            {dev1:dev1, dev2:dev2},
+            {dev1:dev3},
+            {dev1:dev4}
+          ]
+        },
+        {
+          name: 'Small Team Size: Multiple recent occurrences should be very rare',
+          teamSize: 4,
+          historyDays: 7,
+          history: [
+            {
+              date: getDateFromNDaysAgo(1), //yesterday
+              pairs: [
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3, dev4]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(2),
+              pairs: [
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3, dev4]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(3),
+              pairs: [
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3, dev4]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(4),
+              pairs: [
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3, dev4]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(5),
+              pairs: [
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3, dev4]},
+              ]
+            }
+          ],
+          assertionType: 'maxOccurrences',
+          expectedOccurrences: 1,
+          attempts: 50,
+          pairsToCheck: [
+            {dev1:dev1, dev2:dev2},
+            {dev1:dev3, dev2:dev4},
+          ]
+        },
+        {
+          name: 'Small Team Size: Long-term fairness - all developers should eventually pair with each other over time',
+          teamSize: 4,
+          historyDays: 10,
+          history: [
+            {
+              date: getDateFromNDaysAgo(8),
+              pairs: [
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3, dev4]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(7),
+              pairs: [
+                {pairs: [dev1, dev4]},
+                {pairs: [dev2, dev3]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(6),
+              pairs: [
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3, dev4]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(5),
+              pairs: [
+                {pairs: [dev1, dev4]},
+                {pairs: [dev2, dev3]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(4),
+              pairs: [
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3, dev4]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(3),
+              pairs: [
+                {pairs: [dev1, dev4]},
+                {pairs: [dev2, dev3]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(2),
+              pairs: [
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3, dev4]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(1),
+              pairs: [
+                {pairs: [dev1, dev4]},
+                {pairs: [dev2, dev3]},
+              ]
+            },
+          ],
+          assertionType: 'minOccurrences',
+          expectedOccurrences: 10,
+          attempts: 100, // More attempts to see distribution
+          pairsToCheck: [
+            { dev1: dev1, dev2: dev3},
+            { dev1: dev2, dev2: dev4},
+          ]
+        },
+        {
+          name: 'Small Team Size: Sticking pairs should be maintained despite history',
+          teamSize: 4,
+          historyDays: 5,
+          stickingPairs: [{board: board1, devs: [dev1, dev2]}],
+          history: [
+            {
+              date: getDateFromNDaysAgo(1),
+              pairs: [
+                {pairs: [dev1, dev3]}, // Conflicts with sticking pair
+                {pairs: [dev2, dev4]},
+                {pairs: [dev5, dev6]},
+              ]
+            }
+          ],
+          assertionType: 'exactOccurrences',
+          expectedOccurrences: 10,
+          attempts: 10,
+          pairsToCheck: [
+            {dev1: dev1, dev2: dev2} // Sticking pair should always be present
+          ]
+        },
+        {
+          name: 'Small Team Size: Solo developers should rotate fairly based on history',
+          teamSize: 4,
+          historyDays: 7,
+          allowSolo: true,
+          history: [
+            { date: getDateFromNDaysAgo(1), pairs: [{pairs: [dev1]}, {pairs: [dev2, dev3]}] },
+            { date: getDateFromNDaysAgo(2), pairs: [{pairs: [dev4]}, {pairs: [dev1, dev5]}] },
+            { date: getDateFromNDaysAgo(3), pairs: [{pairs: [dev2]}, {pairs: [dev6, dev3]}] },
+          ],
+          assertionType: 'maxOccurrences',
+          expectedOccurrences: 1,
+          attempts: 50,
+          pairsToCheck: [ //Ensure dev1, dev4, dev2 isn't solo
+            {dev1: dev1},
+            {dev1: dev4},
+            {dev1: dev2}
+          ]
+        },
+        {
+          name: 'Small Team Size: Malformed history data should not break algorithm',
+          teamSize: 4,
+          historyDays: 5,
+          history: [
+            { date: getDateFromNDaysAgo(1), pairs: [{pairs: [dev1]}] }, // Solo pair
+            { date: getDateFromNDaysAgo(2), pairs: [{pairs: []}] }, // Empty pair
+            { date: getDateFromNDaysAgo(3), pairs: [{pairs: [dev2, dev3, dev4]}] }, // Triple pair
+            { date: 'invalid-date', pairs: [{pairs: [dev5, dev6]}] }, // Invalid date
+          ],
+          assertionType: 'minOccurrences',
+          expectedOccurrences: 1,
+          attempts: 25,
+          pairsToCheck: [
+            {dev1: dev1, dev2: dev2}
+          ]
+        },
+        {
+          name: 'Medium Team Size: Yesterday\'s pairings shouldn\'t be picked today (3 days history)',
+          teamSize: 6,
           historyDays: 5,
           history: [
             {
@@ -449,15 +680,15 @@ describe('RotationService', () => {
               pairs: [
                 {pairs: [dev1, dev2]},
                 {pairs: [dev3, dev4]},
-                {pairs: [dev5, dev6]},
-                {pairs: [dev7]}, //solo
+                {pairs: [dev5]},//solo
+                {pairs: [dev6]},//solo
               ]
             },
             {
               date: getDateFromNDaysAgo(2),
               pairs: [
                 {pairs: [dev3, dev2]},
-                {pairs: [dev7, dev5]},
+                {pairs: [dev6, dev5]},
                 {pairs: [dev4, dev1]},
               ]
             },
@@ -470,17 +701,292 @@ describe('RotationService', () => {
               ]
             }
           ],
-          expectedMaxOccurrences: 2,
+          assertionType: 'maxOccurrences',
+          expectedOccurrences: 2,
           attempts: 10,
           pairsToCheck: [
-            {dev1, dev2},
-            {dev3, dev4},
-            {dev5, dev6},
-            {dev7} // make sure dev7 wasn't picked to be solo again
+            {dev1:dev1, dev2:dev2},
+            {dev1:dev3, dev2:dev4},
+            {dev1:dev5}, // make sure wasn't picked to be solo again
+            {dev1:dev6}, // make sure wasn't picked to be solo again
           ]
         },
         {
-          name: '1 day history - yesterdays pairings shouldnt be picked today (tolerance up to 2 in 10 attempts)',
+          name: 'Medium Team Size: Yesterday\'s pairings shouldn\'t be picked today (1 day history)',
+          teamSize: 6,
+          historyDays: 3,
+          history: [
+            {
+              date: getDateFromNDaysAgo(1), //yesterday
+              pairs: [
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3, dev4]},
+                {pairs: [dev5]},
+                {pairs: [dev6]}
+              ]
+            }
+          ],
+          assertionType: 'maxOccurrences',
+          expectedOccurrences: 0,
+          attempts: 10,
+          pairsToCheck: [
+            {dev1:dev1, dev2:dev2},
+            {dev1:dev3, dev2:dev4},
+            {dev1:dev5},
+            {dev1:dev6}
+          ]
+        },
+        {
+          name: 'Medium Team Size: Multiple recent occurrences should be very rare',
+          teamSize: 6,
+          historyDays: 7,
+          history: [
+            {
+              date: getDateFromNDaysAgo(1), //yesterday
+              pairs: [
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3, dev4]},
+                {pairs: [dev5, dev6]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(2),
+              pairs: [
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3, dev4]},
+                {pairs: [dev5, dev6]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(3),
+              pairs: [
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3, dev4]},
+                {pairs: [dev5, dev6]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(4),
+              pairs: [
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3, dev4]},
+                {pairs: [dev5, dev6]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(5),
+              pairs: [
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3, dev4]},
+                {pairs: [dev6, dev5]},
+              ]
+            }
+          ],
+          assertionType: 'maxOccurrences',
+          expectedOccurrences: 1,
+          attempts: 20,
+          pairsToCheck: [
+            {dev1:dev1, dev2:dev2},
+            {dev1:dev3, dev2:dev4},
+            {dev1:dev5, dev2:dev6},
+          ]
+        },
+        {
+          name: 'Medium Team Size: Long-term fairness - all developers should eventually pair with each other over time',
+          teamSize: 6,
+          historyDays: 10,
+          history: [
+            {
+              date: getDateFromNDaysAgo(8),
+              pairs: [
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3, dev4]},
+                {pairs: [dev5, dev6]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(7),
+              pairs: [
+                {pairs: [dev6, dev1]},
+                {pairs: [dev5, dev2]},
+                {pairs: [dev4, dev3]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(6),
+              pairs: [
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3, dev4]},
+                {pairs: [dev5, dev6]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(5),
+              pairs: [
+                {pairs: [dev6, dev1]},
+                {pairs: [dev5, dev2]},
+                {pairs: [dev4, dev3]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(4),
+              pairs: [
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3, dev4]},
+                {pairs: [dev5, dev6]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(3),
+              pairs: [
+                {pairs: [dev6, dev1]},
+                {pairs: [dev5, dev2]},
+                {pairs: [dev4, dev3]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(2),
+              pairs: [
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3, dev4]},
+                {pairs: [dev5, dev6]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(1),
+              pairs: [
+                {pairs: [dev6, dev1]},
+                {pairs: [dev5, dev2]},
+                {pairs: [dev4, dev3]},
+              ]
+            },
+          ],
+          assertionType: 'minOccurrences',
+          expectedOccurrences: 10,
+          attempts: 100, // More attempts to see distribution
+          pairsToCheck: [
+            { dev1: dev1, dev2: dev5},
+            { dev1: dev1, dev2: dev3},
+            { dev1: dev1, dev2: dev4},
+            { dev1: dev2, dev2: dev3},
+            { dev1: dev2, dev2: dev4},
+            { dev1: dev2, dev2: dev6},
+            { dev1: dev3, dev2: dev1},
+            { dev1: dev3, dev2: dev2},
+            { dev1: dev3, dev2: dev5},
+            { dev1: dev3, dev2: dev6},
+          ]
+        },
+        {
+          name: 'Medium Team Size: Sticking pairs should be maintained despite history',
+          teamSize: 6,
+          historyDays: 5,
+          stickingPairs: [{board: board1, devs: [dev1, dev2]}],
+          history: [
+            {
+              date: getDateFromNDaysAgo(1),
+              pairs: [
+                {pairs: [dev1, dev3]}, // Conflicts with sticking pair
+                {pairs: [dev2, dev4]},
+                {pairs: [dev5, dev6]},
+              ]
+            }
+          ],
+          assertionType: 'exactOccurrences',
+          expectedOccurrences: 10,
+          attempts: 10,
+          pairsToCheck: [
+            {dev1: dev1, dev2: dev2} // Sticking pair should always be present
+          ]
+        },
+        {
+          name: 'Medium Team Size: Solo developers should rotate fairly based on history',
+          teamSize: 6,
+          historyDays: 7,
+          allowSolo: true,
+          history: [
+            { date: getDateFromNDaysAgo(1), pairs: [{pairs: [dev1]}, {pairs: [dev2, dev3]}] },
+            { date: getDateFromNDaysAgo(2), pairs: [{pairs: [dev4]}, {pairs: [dev1, dev5]}] },
+            { date: getDateFromNDaysAgo(3), pairs: [{pairs: [dev2]}, {pairs: [dev6, dev3]}] },
+          ],
+          assertionType: 'maxOccurrences',
+          expectedOccurrences: 1,
+          attempts: 50,
+          pairsToCheck: [ //Ensure dev1, dev4, dev2 isn't solo
+            {dev1: dev1},
+            {dev1: dev4},
+            {dev1: dev2}
+          ]
+        },
+        {
+          name: 'Medium Team Size: Malformed history data should not break algorithm',
+          teamSize: 6,
+          historyDays: 5,
+          history: [
+            { date: getDateFromNDaysAgo(1), pairs: [{pairs: [dev1]}] }, // Solo pair
+            { date: getDateFromNDaysAgo(2), pairs: [{pairs: []}] }, // Empty pair
+            { date: getDateFromNDaysAgo(3), pairs: [{pairs: [dev2, dev3, dev4]}] }, // Triple pair
+            { date: 'invalid-date', pairs: [{pairs: [dev5, dev6]}] }, // Invalid date
+          ],
+          assertionType: 'minOccurrences',
+          expectedOccurrences: 1,
+          attempts: 25,
+          pairsToCheck: [
+            {dev1: dev1, dev2: dev2}
+          ]
+        },
+        {
+          name: 'Large Team Size: Yesterday\'s pairings shouldn\'t be picked today (3 days history)',
+          teamSize: 11,
+          historyDays: 5,
+          history: [
+            {
+              date: getDateFromNDaysAgo(1),//yesterday
+              pairs: [
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3, dev4]},
+                {pairs: [dev5, dev6]},
+                {pairs: [dev9, dev8]},
+                {pairs: [dev7]}, //solo
+                {pairs: [dev10]}, //solo
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(2),
+              pairs: [
+                {pairs: [dev3, dev2]},
+                {pairs: [dev7, dev5]},
+                {pairs: [dev4, dev1]},
+                {pairs: [dev10, dev8]},
+                {pairs: [dev6]}, //solo,
+                {pairs: [dev9]}, //solo,
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(3),
+              pairs: [
+                {pairs: [dev1, dev3]},
+                {pairs: [dev2, dev6]},
+                {pairs: [dev4, dev5]},
+                {pairs: [dev7, dev10]},
+              ]
+            }
+          ],
+          assertionType: 'maxOccurrences',
+          expectedOccurrences: 2,
+          attempts: 10,
+          pairsToCheck: [
+            {dev1:dev1, dev2:dev2},
+            {dev1:dev3, dev2:dev4},
+            {dev1:dev5, dev2:dev6},
+            {dev1:dev9, dev2:dev8},
+            {dev1:dev7}, // make sure dev7 wasn't picked to be solo again
+            {dev1:dev10}, // make sure dev10 wasn't picked to be solo again
+          ]
+        },
+        {
+          name: 'Large Team Size: Yesterday\'s pairings shouldn\'t be picked today (1 days history)',
+          teamSize: 11,
           historyDays: 3,
           history: [
             {
@@ -492,55 +998,256 @@ describe('RotationService', () => {
               ]
             }
           ],
-          expectedMaxOccurrences: 2,
+          assertionType: 'maxOccurrences',
+          expectedOccurrences: 2,
           attempts: 10,
           pairsToCheck: [
-            {dev1, dev2},
-            {dev3, dev4},
-            {dev5}
+            {dev1:dev1, dev2:dev2},
+            {dev1:dev3, dev2:dev4},
+            {dev1:dev5}
           ]
         },
         {
-          name: '4 day history - multiple recent occurrences should be very rare (tolerance up to 2 in 10 attempts)',
+          name: 'Large Team Size: Multiple recent occurrences should be very rare',
+          teamSize: 11,
           historyDays: 7,
           history: [
             {
-              date: getDateFromNDaysAgo(1), //today
+              date: getDateFromNDaysAgo(1), //yesterday
               pairs: [
-                {pairs: [dev1, dev2]}
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3, dev4]},
+                {pairs: [dev5, dev6]},
+                {pairs: [dev8, dev7]},
               ]
             },
             {
               date: getDateFromNDaysAgo(2),
               pairs: [
-                {pairs: [dev1, dev2]}
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3, dev4]},
+                {pairs: [dev5, dev6]},
+                {pairs: [dev10, dev9]},
               ]
             },
             {
               date: getDateFromNDaysAgo(3),
               pairs: [
-                {pairs: [dev1, dev2]}
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3, dev4]},
+                {pairs: [dev8, dev6]},
               ]
             },
             {
               date: getDateFromNDaysAgo(4),
               pairs: [
-                {pairs: [dev1, dev2]}
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3, dev4]},
+                {pairs: [dev9, dev6]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(5),
+              pairs: [
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3, dev4]},
+                {pairs: [dev6, dev9]},
               ]
             }
           ],
-          expectedMaxOccurrences: 2,
-          attempts: 10,
+          assertionType: 'maxOccurrences',
+          expectedOccurrences: 2,
+          attempts: 20,
           pairsToCheck: [
-            {dev1, dev2}
+            {dev1:dev1, dev2:dev2},
+            {dev1:dev3, dev2:dev4},
           ]
         },
-      ])('$name', ({history, historyDays, attempts, expectedMaxOccurrences, pairsToCheck}) => {
+        {
+          name: 'Large Team Size: Long-term fairness - all developers should eventually pair with each other over time',
+          teamSize: 11,
+          historyDays: 10,
+          history: [
+            {
+              date: getDateFromNDaysAgo(8),
+              pairs: [
+                {pairs: [dev1, dev10]},
+                {pairs: [dev2, dev5]},
+                {pairs: [dev3, dev7]},
+                {pairs: [dev4, dev9]},
+                {pairs: [dev6, dev8]},
+                {pairs: [dev11]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(7),
+              pairs: [
+                {pairs: [dev1, dev2]},
+                {pairs: [dev3, dev4]},
+                {pairs: [dev5, dev6]},
+                {pairs: [dev7, dev9]},
+                {pairs: [dev11, dev10]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(6),
+              pairs: [
+                {pairs: [dev1, dev3]},
+                {pairs: [dev2, dev4]},
+                {pairs: [dev5, dev7]},
+                {pairs: [dev6, dev8]},
+                {pairs: [dev11, dev10]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(5),
+              pairs: [
+                {pairs: [dev1, dev4]},
+                {pairs: [dev2, dev6]},
+                {pairs: [dev3, dev8]},
+                {pairs: [dev5, dev9]},
+                {pairs: [dev11, dev10]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(4),
+              pairs: [
+                {pairs: [dev1, dev5]},
+                {pairs: [dev2, dev7]},
+                {pairs: [dev3, dev9]},
+                {pairs: [dev4, dev8]},
+                {pairs: [dev6, dev10]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(3),
+              pairs: [
+                {pairs: [dev1, dev6]},
+                {pairs: [dev2, dev8]},
+                {pairs: [dev3, dev10]},
+                {pairs: [dev4, dev9]},
+                {pairs: [dev5, dev7]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(2),
+              pairs: [
+                {pairs: [dev1, dev8]},
+                {pairs: [dev2, dev10]},
+                {pairs: [dev3, dev6]},
+                {pairs: [dev4, dev7]},
+                {pairs: [dev5, dev11]},
+              ]
+            },
+            {
+              date: getDateFromNDaysAgo(1),
+              pairs: [
+                {pairs: [dev1, dev9]},
+                {pairs: [dev2, dev3]},
+                {pairs: [dev4, dev5]},
+                {pairs: [dev6, dev7]},
+                {pairs: [dev8, dev10]},
+              ]
+            },
+          ],
+          assertionType: 'minOccurrences',
+          expectedOccurrences: 40,
+          attempts: 150, // More attempts to see distribution
+          pairsToCheck: [
+            { dev1: dev1, dev2: dev7},
+            { dev1: dev2, dev2: dev9},
+            { dev1: dev3, dev2: dev5},
+          ]
+        },
+        {
+          name: 'Large Team Size: Sticking pairs should be maintained despite history',
+          teamSize: 11,
+          historyDays: 5,
+          stickingPairs: [{board: board1, devs: [dev1, dev2]}],
+          history: [
+            {
+              date: getDateFromNDaysAgo(1),
+              pairs: [
+                {pairs: [dev1, dev3]}, // Conflicts with sticking pair
+                {pairs: [dev2, dev4]},
+                {pairs: [dev5, dev6]},
+                {pairs: [dev7, dev8]},
+                {pairs: [dev9, dev10]}
+              ]
+            }
+          ],
+          assertionType: 'exactOccurrences',
+          expectedOccurrences: 10,
+          attempts: 10,
+          pairsToCheck: [
+            {dev1: dev1, dev2: dev2} // Sticking pair should always be present
+          ]
+        },
+        {
+          name: 'Large Team Size: Solo developers should rotate fairly based on history',
+          teamSize: 11,
+          historyDays: 7,
+          allowSolo: true,
+          history: [
+            { date: getDateFromNDaysAgo(1), pairs: [{pairs: [dev1]}, {pairs: [dev2, dev3]}] },
+            { date: getDateFromNDaysAgo(2), pairs: [{pairs: [dev4]}, {pairs: [dev1, dev5]}] },
+            { date: getDateFromNDaysAgo(3), pairs: [{pairs: [dev2]}, {pairs: [dev6, dev7]}] },
+          ],
+          assertionType: 'maxOccurrences',
+          expectedOccurrences: 1,
+          attempts: 50,
+          pairsToCheck: [ //Ensure dev1, dev4, dev2 isn't solo
+            {dev1: dev1},
+            {dev1: dev4},
+            {dev1: dev2}
+          ]
+        },
+        {
+          name: 'Large Team Size: Malformed history data should not break algorithm',
+          teamSize: 11,
+          historyDays: 5,
+          history: [
+            { date: getDateFromNDaysAgo(1), pairs: [{pairs: [dev1]}] }, // Solo pair
+            { date: getDateFromNDaysAgo(2), pairs: [{pairs: []}] }, // Empty pair
+            { date: getDateFromNDaysAgo(3), pairs: [{pairs: [dev2, dev3, dev4]}] }, // Triple pair
+            { date: 'invalid-date', pairs: [{pairs: [dev5, dev6]}] }, // Invalid date
+          ],
+          assertionType: 'minOccurrences',
+          expectedOccurrences: 1,
+          attempts: 20,
+          pairsToCheck: [
+            {dev1: dev1, dev2: dev2}
+          ]
+        },
+      ])('$name', ({teamSize, history, stickingPairs, historyDays, attempts, assertionType, expectedOccurrences, pairsToCheck}) => {
         localStorageService.getHistoryDays.mockReturnValue(historyDays);
+
+        switch (teamSize) {
+        case 6:
+          localStorageService.getDevs.mockReturnValue([dev1, dev2, dev3, dev4, dev5, dev6]);
+          localStorageService.getBoards.mockReturnValue([board1, board2, board3]);
+          break;
+        case 11:
+          localStorageService.getDevs.mockReturnValue([dev1, dev2, dev3, dev4, dev5, dev6, dev7, dev8, dev9, dev10, dev11]);
+          localStorageService.getBoards.mockReturnValue([board1, board2, board3, board4, board5, board6]);
+          break;
+        case 4:
+          localStorageService.getDevs.mockReturnValue([dev1, dev2, dev3, dev4]);
+          localStorageService.getBoards.mockReturnValue([board1, board2]);
+          break;
+
+        default:
+          throw new Error(`Unsupported team size: ${teamSize}`);
+        }
+
         localStorageService.getHistory.mockReturnValue(history);
 
+        if (stickingPairs) {
+          localStorageService.getSticking.mockReturnValue(stickingPairs);
+        }
+
         //console.log(' ***** history **** ',  JSON.stringify(history, null, 2));
-        console.log(' *****  pairsToCheck ***** ', JSON.stringify(pairsToCheck, null, 2));
+        //console.log(' *****  pairsToCheck ***** ', JSON.stringify(pairsToCheck, null, 2));
 
         const allResults: Pair[][] = [];
         for (let i = 0; i < attempts; i++) {
@@ -548,7 +1255,8 @@ describe('RotationService', () => {
           allResults.push(results);
         }
 
-        console.log(' *****  allResults ***** ', JSON.stringify(allResults, null, 2));
+
+        // console.log(' *****  allResults ***** ', JSON.stringify(allResults, null, 2));
 
         pairsToCheck.forEach(({dev1, dev2}) => {
           const pairCount = allResults.filter(results =>
@@ -557,206 +1265,39 @@ describe('RotationService', () => {
             )
           ).length;
 
-          expect(pairCount).toBeLessThanOrEqual(expectedMaxOccurrences);
+          switch (assertionType) {
+          case 'maxOccurrences':
+            expect(pairCount).toBeLessThanOrEqual(expectedOccurrences);
+            console.log(`Pair ${dev1} and ${dev2} occurred ${pairCount} times, expected max ${expectedOccurrences}`);
+            break;
+          case 'minOccurrences':
+            expect(pairCount).toBeGreaterThanOrEqual(expectedOccurrences);
+            console.log(`Pair ${dev1} and ${dev2} occurred ${pairCount} times, expected min ${expectedOccurrences}`);
+            break;
+          case 'exactOccurrences':
+            expect(pairCount).toBe(expectedOccurrences);
+            console.log(`Pair ${dev1} and ${dev2} occurred exactly ${pairCount} times, expected ${expectedOccurrences}`);
+            break;
+          default:
+            throw new Error(`Unknown assertion type: ${assertionType}`);
+          }
         });
       });
     });
-    // describe('when dev history is enabled and not empty', () => {
-
-    //   beforeEach(() => {
-    //     localStorageService.getKeepHistory.mockReturnValue(true);
-    //   });
-
-    // it.each([
-    //   {
-    //     name: '5 days',
-    //     daysHistory: 5,
-    //     iterations: 5,
-    //     expectedMaxOccurrences: 1,
-    //   },
-    //   {
-    //     name: '7 days',
-    //     daysHistory: 7,
-    //     iterations: 7,
-    //     expectedMaxOccurrences: 2,
-    //   },
-    //   {
-    //     name: '10 days',
-    //     daysHistory: 10,
-    //     iterations: 10,
-    //     expectedMaxOccurrences: 3,
-    //   }
-    // ])
-    // ('should prefer pairings that haven\'t occurred recently', () => {
-    //   const dev1 = getNthDev(1);
-    //   const dev2 = getNthDev(2);
-    //   const dev3 = getNthDev(3);
-    //   const dev4 = getNthDev(4);
-    //   const dev5 = getNthDev(5);
-    //   const dev6 = getNthDev(6);
-
-    //   const board1 = getNthBoard(1);
-    //   const board2 = getNthBoard(2);
-    //   const board3 = getNthBoard(3);
-
-    //   const history = [
-    //     {
-    //       date: '2024-03-19',
-    //       pairs: [
-    //         { pairs: [dev1, dev2] },
-    //         { pairs: [dev3, dev4] },
-    //         { pairs: [dev5, dev6] }
-    //       ]
-    //     },
-    //     {
-    //       date: '2024-03-18',
-    //       pairs: [
-    //         { pairs: [dev1, dev3] },
-    //         { pairs: [dev2, dev4] },
-    //         { pairs: [dev5, dev6] }
-    //       ]
-    //     }
-    //   ];
-
-    //   localStorageService.getDevs.mockReturnValue([dev1, dev2, dev3, dev4, dev5, dev6]);
-    //   localStorageService.getBoards.mockReturnValue([board1, board2, board3]);
-    //   localStorageService.getHistory.mockReturnValue(history);
-
-    //   const numberOfTestRuns = 10;
-
-    //   // Run multiple iterations to verify the pattern
-    //   const allResults: Pair[][] = [];
-    //   for (let i = 0; i < numberOfTestRuns; i++) {
-    //     const results = rotationService.makeItANewRotato();
-    //     allResults.push(results);
-    //   }
-
-    //   // Verify that dev1-dev2 and dev3-dev4 pairings are less common
-    //   const dev1Dev2Count = allResults.filter(results =>
-    //     results.some(pair =>
-    //       pair.devs.includes(dev1) && pair.devs.includes(dev2)
-    //     )
-    //   ).length;
-
-    //   const dev3Dev4Count = allResults.filter(results =>
-    //     results.some(pair =>
-    //       pair.devs.includes(dev3) && pair.devs.includes(dev4)
-    //     )
-    //   ).length;
-
-    //   // These pairings should be less common than others
-    //   console.log(dev1Dev2Count*100/numberOfTestRuns);
-    //   console.log(dev3Dev4Count);
-    //   expect(dev1Dev2Count).toBeLessThan(2); // Less than 20% chance of repeating
-    //   expect(dev3Dev4Count).toBeLessThan(2); // Less than 20% chance of repeating
-    // });
-
-    // it('should prefer pairings that haven\'t occurred at all', () => {
-    //   // Set up history with some pairings
-    //   const history = [
-    //     {
-    //       date: '2024-03-19',
-    //       pairs: [
-    //         { pairs: [dev1, dev2] },
-    //         { pairs: [dev3, dev4] },
-    //         { pairs: [dev5, dev6] }
-    //       ]
-    //     }
-    //   ];
-
-    //   localStorageService.getHistory.mockReturnValue(history);
-
-    //   // Run multiple iterations
-    //   const allResults: Pair[][] = [];
-    //   for (let i = 0; i < 10; i++) {
-    //     const results = rotationService.makeItANewRotato();
-    //     allResults.push(results);
-    //   }
-
-    //   // Verify that dev1-dev3 and dev2-dev4 pairings are more common
-    //   const dev1Dev3Count = allResults.filter(results =>
-    //     results.some(pair =>
-    //       pair.devs.includes(dev1) && pair.devs.includes(dev3)
-    //     )
-    //   ).length;
-
-    //   const dev2Dev4Count = allResults.filter(results =>
-    //     results.some(pair =>
-    //       pair.devs.includes(dev2) && pair.devs.includes(dev4)
-    //     )
-    //   ).length;
-
-    //   // These pairings should be more common
-    //   expect(dev1Dev3Count).toBeGreaterThan(5); // More than half the time
-    //   expect(dev2Dev4Count).toBeGreaterThan(5); // More than half the time
-    // });
-
-    // it('should handle team size scaling in scoring', () => {
-    //   // Test with a small team (4 devs)
-    //   const smallTeam = [dev1, dev2, dev3, dev4];
-    //   localStorageService.getDevs.mockReturnValue(smallTeam);
-
-    //   const history = [
-    //     {
-    //       date: '2024-03-19',
-    //       pairs: [
-    //         { pairs: [dev1, dev2] },
-    //         { pairs: [dev3, dev4] }
-    //       ]
-    //     }
-    //   ];
-
-    //   localStorageService.getHistory.mockReturnValue(history);
-
-    //   const smallTeamResults = rotationService.makeItANewRotato();
-
-    //   // Test with a larger team (6 devs)
-    //   const largeTeam = [dev1, dev2, dev3, dev4, dev5, dev6];
-    //   localStorageService.getDevs.mockReturnValue(largeTeam);
-
-    //   const largeTeamResults = rotationService.makeItANewRotato();
-
-    //   // The scoring should be different based on team size
-    //   // For small teams, we expect more weight on days since last pairing
-    //   // For large teams, we expect more weight on recurrence count
-    //   expect(smallTeamResults).not.toEqual(largeTeamResults);
-    // });
-
-    // it('should respect sticking pairs even when optimizing for history', () => {
-    //   const stickingPair: Pair = {
-    //     board: board1,
-    //     devs: [dev1, dev2],
-    //     sticking: true
-    //   };
-
-    //   localStorageService.getSticking.mockReturnValue([stickingPair]);
-
-    //   const history = [
-    //     {
-    //       date: '2024-03-19',
-    //       pairs: [
-    //         { pairs: [dev1, dev3] }, // This pairing should be ignored due to sticking
-    //         { pairs: [dev2, dev4] },
-    //         { pairs: [dev5, dev6] }
-    //       ]
-    //     }
-    //   ];
-
-    //   localStorageService.getHistory.mockReturnValue(history);
-
-    //   const results = rotationService.makeItANewRotato();
-
-    //   // Verify sticking pair is maintained
-    //   expect(results).toContainEqual(stickingPair);
-
-    //   // Verify other pairs are optimized based on history
-    //   const otherPairs = results.filter(pair => !pair.sticking);
-    //   expect(otherPairs).toHaveLength(2);
-    // });
-    //});
 
   });
 
+
+  function getDateFromNDaysAgo(daysAgo: number): string {
+    const date = new Date();
+    date.setDate(date.getDate() - daysAgo);
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  }
 
   function getNthDev(index: number): string {
     while (testDevData.length < index) {
